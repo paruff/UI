@@ -1,7 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { map, take } from 'rxjs/operators';
+import {map, take} from 'rxjs/operators';
 import { CollectorService } from 'src/app/shared/collector.service';
 import { DashboardService } from 'src/app/shared/dashboard.service';
 
@@ -16,6 +16,7 @@ export class RepoConfigFormComponent implements OnInit {
   private componentId: string;
 
   repoConfigForm: FormGroup;
+  scm = [];
 
   @Input()
   set widgetConfig(widgetConfig: any) {
@@ -33,7 +34,7 @@ export class RepoConfigFormComponent implements OnInit {
 
   constructor(
     public activeModal: NgbActiveModal,
-    private formBuilder: FormBuilder,
+    public formBuilder: FormBuilder,
     private collectorService: CollectorService,
     private dashboardService: DashboardService
   ) {
@@ -44,23 +45,32 @@ export class RepoConfigFormComponent implements OnInit {
     this.getDashboardComponent();
   }
 
-  private createForm() {
+  public createForm() {
     this.repoConfigForm = this.formBuilder.group({
-      scm: '',
+      scm: [''],
       url: '',
       branch: '',
       userID: '',
       password: '',
       personalAccessToken: ''
     });
+
+    this.collectorService.collectorsByType('SCM').subscribe(scmCollectors => {
+      const scmTools = scmCollectors.map(currSCMTool => currSCMTool.name);
+      const result = [];
+      for (const currTool of scmTools) {
+        result.push({type: currTool});
+      }
+      this.scm = result;
+    });
   }
 
-  private submitForm() {
+  public submitForm() {
     const newConfig = {
       name: 'repo',
       componentId: this.componentId,
       options: {
-        id: this.widgetConfigId,
+        id: this.widgetConfigId ? this.widgetConfigId : 'repo0',
         scm: {
           name: this.repoConfigForm.value.scm,
           value: this.repoConfigForm.value.scm,
