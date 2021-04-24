@@ -11,6 +11,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
 import { FeatureService } from '../feature.service';
 import { IFeature } from '../interfaces';
 import { FeatureWidgetComponent } from './feature-widget.component';
+import {FeatureModule} from '../feature.module';
 
 class MockFeatureService {
   mockFeatureDataEstimates = {
@@ -85,7 +86,8 @@ class MockFeatureService {
 
 @NgModule({
   declarations: [],
-  imports: [HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([]), NgbModule],
+  imports: [HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule,
+    RouterModule.forRoot([]), NgbModule, FeatureModule],
   entryComponents: []
 })
 class TestModule { }
@@ -131,14 +133,14 @@ describe('FeatureWidgetComponent', () => {
     collectorItemId: '5678'
   };
 
-  const estimates = {
+  /*const estimates = {
     id: '123',
     openEstimate: 1,
     inProgressEstimate: 2,
     completeEstimate: 3
-  } as IFeature;
+  } as IFeature;*/
 
-  const iterations = [
+  const iterations = [[
     {
       sName: 'name',
       changeDate: 'date',
@@ -162,11 +164,34 @@ describe('FeatureWidgetComponent', () => {
       sUrl: 'url',
       sNumber: 'num',
       sEstimateTime: 'time',
-    }
-  ];
+    }],
+      [{
+        sName: 'name',
+        changeDate: 'date',
+        sUrl: 'url',
+        sNumber: 'num',
+        sEstimateTime: 'time',
+        sStatus: 'Backlog',
+      },
+      {
+        sStatus: 'In Progress',
+        changeDate: 'date',
+        sName: 'name',
+        sUrl: 'url',
+        sNumber: 'num',
+        sEstimateTime: 'time',
+      },
+      {
+        sStatus: 'Done',
+        changeDate: 'date',
+        sName: 'name',
+        sUrl: 'url',
+        sNumber: 'num',
+        sEstimateTime: 'time',
+      }]];
 
   const wip = [
-    {
+    [{
       sEpicName: 'name',
       sEpicUrl: 'url',
       sEpicNumber: 'num',
@@ -177,7 +202,19 @@ describe('FeatureWidgetComponent', () => {
       sEpicUrl: 'url',
       sEpicNumber: 'num',
       sEstimate: 'time',
-    }
+    }],
+    [{
+      sEpicName: 'name',
+      sEpicUrl: 'url',
+      sEpicNumber: 'num',
+      sEstimate: 'time',
+    },
+      {
+        sEpicName: 'name',
+        sEpicUrl: 'url',
+        sEpicNumber: 'num',
+        sEstimate: 'time',
+      }]
   ];
 
   beforeEach(async(() => {
@@ -223,13 +260,6 @@ describe('FeatureWidgetComponent', () => {
 
   it('should call startRefreshInterval', () => {
     spyOn(component, 'getCurrentWidgetConfig').and.returnValues(of(mockConfigEpics), of(mockConfigIssues), of(mockConfigIssues), of(null));
-    spyOn(featureService, 'fetchFeatureWip').and.returnValues(of(wip), of(wip), of([]));
-    spyOn(featureService, 'fetchAggregateSprintEstimates').and.returnValues(of(estimates), of(estimates), of([]));
-    spyOn(featureService, 'fetchIterations').and.returnValues(of(iterations), of(iterations), of([]));
-
-    component.startRefreshInterval();
-    component.startRefreshInterval();
-    component.startRefreshInterval();
     component.startRefreshInterval();
   });
 
@@ -264,12 +294,5 @@ describe('FeatureWidgetComponent', () => {
     component.generateFeatureSummary(wip, params);
     component.generateFeatureSummary(null, params);
   });
-
-  it('should assign default if no data', () => {
-    component.hasData = false;
-    component.setDefaultIfNoData();
-    expect(component.charts[0].data.items[0].title).toEqual('No Data Found');
-  });
 });
-
 

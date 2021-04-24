@@ -18,11 +18,10 @@ export class StaticAnalysisDeleteFormComponent implements OnInit {
   public cancel = 'Cancel';
   @Input()
   public message =
-    'This Static Analysis item will be deleted immediately. Would you like to confirm? (You cannot undo this action)';
+    'This static analysis item will be deleted immediately. Would you like to delete?';
 
   private componentId: string;
-  private widgetConfigId: string;
-  private dashboard: any;
+  widgetConfigId: string;
 
   staticAnalysisDeleteForm: FormGroup;
 

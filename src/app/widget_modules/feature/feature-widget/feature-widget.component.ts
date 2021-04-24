@@ -7,22 +7,22 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
 import {forkJoin, of, Subscription} from 'rxjs';
 import {catchError, distinctUntilChanged, startWith, switchMap} from 'rxjs/operators';
 import {
   IClickListData,
-  IClickListItem, IClickListItemFeature
+  IClickListItem
 } from 'src/app/shared/charts/click-list/click-list-interfaces';
 import {DashboardService} from 'src/app/shared/dashboard.service';
 import {LayoutDirective} from 'src/app/shared/layouts/layout.directive';
-import {TwoByTwoLayoutComponent} from 'src/app/shared/layouts/two-by-two-layout/two-by-two-layout.component';
 import {WidgetComponent} from 'src/app/shared/widget/widget.component';
 import {FeatureService} from '../feature.service';
 import {IFeature} from '../interfaces';
 import {FEATURE_CHARTS} from './feature-charts';
-import {FeatureDetailComponent} from '../feature-detail/feature-detail.component';
 import {WidgetState} from '../../../shared/widget-header/widget-state';
+import {IRotationData, IFeatureRotationItem} from '../../../shared/charts/rotation/rotation-chart-interfaces';
+import {FeatureDetailComponent} from '../feature-detail/feature-detail.component';
+import {TwoByOneLayoutComponent} from '../../../shared/layouts/two-by-one-layout/two-by-one-layout.component';
 
 @Component({
   selector: 'app-feature-widget',
@@ -34,21 +34,24 @@ export class FeatureWidgetComponent extends WidgetComponent implements OnInit, A
   private params;
   // Reference to the subscription used to refresh the widget
   private intervalRefreshSubscription: Subscription;
+  private backlog = [];
+  private inProg = [];
+  private done = [];
+  private featureWip;
 
   @ViewChild(LayoutDirective, {static: false}) childLayoutTag: LayoutDirective;
 
   constructor(componentFactoryResolver: ComponentFactoryResolver,
               cdr: ChangeDetectorRef,
               dashboardService: DashboardService,
-              route: ActivatedRoute,
               private featureService: FeatureService) {
-    super(componentFactoryResolver, cdr, dashboardService, route);
+    super(componentFactoryResolver, cdr, dashboardService);
   }
 
   // Initialize the widget and set layout and charts.
   ngOnInit() {
     this.widgetId = 'feature0';
-    this.layout = TwoByTwoLayoutComponent;
+    this.layout = TwoByOneLayoutComponent;
     // Chart configuration moved to external file
     this.charts = FEATURE_CHARTS;
     this.auditType = '';
@@ -88,33 +91,31 @@ export class FeatureWidgetComponent extends WidgetComponent implements OnInit, A
           sprintType: widgetConfig.options.sprintType,
           listType: widgetConfig.options.listType,
         };
-
         return forkJoin(
           this.featureService.fetchFeatureWip(this.params.component, this.params.teamId, this.params.projectId,
-            this.params.sprintType).pipe(catchError(err => of(err))),
+            'scrum').pipe(catchError(err => of(err))),
+          this.featureService.fetchFeatureWip(this.params.component, this.params.teamId, this.params.projectId,
+            'kanban').pipe(catchError(err => of(err))),
           this.featureService.fetchAggregateSprintEstimates(this.params.component, this.params.teamId,
-            this.params.projectId, this.params.sprintType).pipe(catchError(err => of(err))),
+            this.params.projectId, 'scrum').pipe(catchError(err => of(err))),
+          this.featureService.fetchAggregateSprintEstimates(this.params.component, this.params.teamId,
+            this.params.projectId, 'kanban').pipe(catchError(err => of(err))),
           this.featureService.fetchIterations(this.params.component, this.params.teamId, this.params.projectId,
-            this.params.sprintType).pipe(catchError(err => of(err))));
-      })).subscribe(([wip, estimates, iterations]) => {
-        this.hasData = ((wip && (wip as []).length > 0) ||
-          (estimates && (estimates as []).length > 0) ||
-          (iterations && (iterations as []).length > 0));
-        if (this.hasData) {
-          this.loadCharts(wip, estimates, iterations);
-        } else {
-          this.setDefaultIfNoData();
-        }
-      });
+            'scrum').pipe(catchError(err => of(err))),
+          this.featureService.fetchIterations(this.params.component, this.params.teamId, this.params.projectId,
+            'kanban').pipe(catchError(err => of(err))));
+      })).subscribe(([wipScrum, wipKanban, estimatesScrum, estimatesKanban, iterationsScrum, iterationsKanban]) => {
+      this.loadCharts([wipScrum, wipKanban], [estimatesScrum, estimatesKanban], [iterationsScrum, iterationsKanban]);
+    });
   }
 
-  loadCharts(wip, estimates: IFeature, iterations) {
+  loadCharts(wipArray, estimatesArray: IFeature[], iterationsArray) {
     if (this.params.listType === 'epics') {
-      this.generateFeatureSummary(wip, this.params);
+      this.generateFeatureSummary(wipArray, this.params);
     } else {
-      this.generateFeatureSummary(iterations, this.params);
+      this.generateFeatureSummary(iterationsArray, this.params);
     }
-    this.generateIterationSummary(estimates);
+    this.generateIterationSummary(estimatesArray);
     super.loadComponent(this.childLayoutTag);
   }
 
@@ -131,7 +132,6 @@ export class FeatureWidgetComponent extends WidgetComponent implements OnInit, A
     if (!content) {
       return;
     }
-
     const items = [
       {
         status: null,
@@ -143,41 +143,25 @@ export class FeatureWidgetComponent extends WidgetComponent implements OnInit, A
         status: null,
         statusText: '',
         title: 'Project Name',
-        subtitles: [params.projectName],
+        subtitles: [ typeof(params.projectName) === 'string' ? params.projectName : params.projectName.options.projectName],
       },
       {
         status: null,
         statusText: '',
         title: 'Team Name',
-        subtitles: [params.teamName],
+        subtitles: [ typeof(params.teamName) === 'string' ? params.teamName : params.teamName.options.teamName],
       },
     ] as IClickListItem[];
 
     if (params.listType === 'issues') {
-      items[3] = {
-        status: null,
-        statusText: '',
-        title: 'Backlog items',
-        subtitles: [content.filter(curr => curr.sStatus === 'Backlog').length]
-      } as IClickListItem;
-
-      items[4] = {
-        status: null,
-        statusText: '',
-        title: 'In Progress items',
-        subtitles: [content.filter(curr => curr.sStatus === 'In Progress').length]
-      } as IClickListItem;
-
-      items[5] = {
-        status: null,
-        statusText: '',
-        title: 'Done items',
-        subtitles: [content.filter(curr => curr.sStatus === 'Done').length]
-      } as IClickListItem;
+      content.forEach(currSprintType => {
+        this.backlog.push(currSprintType.filter(curr => curr.sStatus === 'Backlog').length);
+        this.inProg.push(currSprintType.filter(curr => curr.sStatus === 'In Progress').length);
+        this.done.push(currSprintType.filter(curr => curr.sStatus === 'Done').length);
+      });
     }
-
-    this.processFeatureWipResponse(content as IClickListItemFeature, params.listType);
-    this.charts[0].data = {
+    this.featureWip = this.processFeatureWipResponse(content as IFeatureRotationItem, params.listType);
+    this.charts[1].data = {
       items,
       clickableContent: null,
       clickableHeader: null
@@ -187,85 +171,102 @@ export class FeatureWidgetComponent extends WidgetComponent implements OnInit, A
   // *********************** ITERATION SUMMARY ************************
 
   // Displays Sprint information for Open, WIP, Done
-  generateIterationSummary(result: IFeature) {
-    let items;
+  generateIterationSummary(result: IFeature[]) {
+    let scrumItems;
+    let kanbanItems;
+
     if (!result) {
       return;
     }
+    scrumItems = [
+      {
+        agileType: this.params.sprintType,
+        type: 'Scrum',
+        title: 'OPEN',
+        subtitles: [result[0].openEstimate],
+        status: [{Backlog: this.backlog[0], 'In Progress': this.inProg[0], Done: this.done[0]}],
+        rotationData: this.featureWip[0]
+      },
+      {
+        agileType: this.params.sprintType,
+        type: 'Scrum',
+        title: 'WIP',
+        subtitles: [result[0].inProgressEstimate],
+        rotationData: this.featureWip[0],
+      },
+      {
+        agileType: this.params.sprintType,
+        type: 'Scrum',
+        title: 'DONE',
+        subtitles: [result[0].completeEstimate],
+        rotationData: this.featureWip[0],
+      },
+    ] as IFeatureRotationItem[];
 
-    if (this.params.sprintType === 'scrum' || this.params.sprintType === 'both') {
-      items = [
-        {
-          status: null,
-          statusText: '',
-          title: 'OPEN',
-          subtitles: [result.openEstimate],
-        },
-        {
-          status: null,
-          statusText: '',
-          title: 'WIP',
-          subtitles: [result.inProgressEstimate],
-        },
-        {
-          status: null,
-          statusText: '',
-          title: 'DONE',
-          subtitles: [result.completeEstimate],
-        },
-      ] as IClickListItem[];
-    } else if (this.params.sprintType === 'kanban') {
-      items = [
-        {
-          status: null,
-          statusText: '',
-          title: 'OPEN',
-          subtitles: [result.openEstimate],
-        },
-        {
-          status: null,
-          statusText: '',
-          title: 'WIP',
-          subtitles: [result.inProgressEstimate],
-        }
-      ] as IClickListItem[];
+    kanbanItems = [
+      {
+        agileType: this.params.sprintType,
+        type: 'Kanban',
+        title: 'OPEN',
+        subtitles: [result[1].openEstimate],
+        status: [{Backlog: this.backlog[1], 'In Progress': this.inProg[1], Done: this.done[1]}],
+        rotationData: this.featureWip[1]
+      },
+      {
+        agileType: this.params.sprintType,
+        type: 'Kanban',
+        title: 'WIP',
+        subtitles: [result[1].inProgressEstimate],
+        rotationData: this.featureWip[1],
+      }
+    ] as IFeatureRotationItem[];
+
+    if (this.params.sprintType === 'scrumkanban') {
+      this.charts[0].data = {
+        items: [scrumItems, kanbanItems],
+        clickableContent: FeatureDetailComponent,
+        clickableHeader: null
+      } as IRotationData;
+    } else if (this.params.sprintType === 'scrum') {
+      this.charts[0].data = {
+        items: [scrumItems],
+        clickableContent: FeatureDetailComponent,
+        clickableHeader: null
+      } as IRotationData;
+    } else {
+      this.charts[0].data = {
+        items: [kanbanItems],
+        clickableContent: FeatureDetailComponent,
+        clickableHeader: null
+      } as IRotationData;
     }
-
-    this.charts[1].data = {
-      items,
-      clickableContent: null,
-      clickableHeader: null
-    } as IClickListData;
   }
 
   // **************************** EPICS/ISSUES *******************************
 
-  // Displays epics or issues
   private processFeatureWipResponse(data, issueOrEpic: string) {
-    let issueOrEpicCollection: IClickListItemFeature[] = [];
+    const items = [this.issueOrEpicBreakdown(data[0], issueOrEpic), this.issueOrEpicBreakdown(data[1], issueOrEpic)];
+    return items;
+  }
 
+  private issueOrEpicBreakdown(issueOrEpicCollection, issueOrEpic) {
     if (issueOrEpic === 'issues') {
-      issueOrEpicCollection = data.sort((a: IClickListItemFeature, b: IClickListItemFeature): number => {
+      issueOrEpicCollection = issueOrEpicCollection.sort((a: IFeatureRotationItem, b: IFeatureRotationItem): number => {
         return a.changeDate > b.changeDate ? 1 : -1;
       }).reverse().slice(0, 10);
-    } else {
-      data.forEach(curr => {
-        issueOrEpicCollection.push(curr);
-      });
     }
-
-    const items = issueOrEpicCollection.map(curr => {
+    return issueOrEpicCollection.map(curr => {
       if (issueOrEpic === 'epics') {
         return {
           title: curr.sEpicName,
           name: curr.sEpicName,
           url: curr.sEpicUrl,
           number: curr.sEpicNumber,
-          progressStatus: '-',
+          progressStatus: 'N/A',
           type: 'Epic',
-          date: '-',
+          date: 'N/A',
           time: curr.sEstimate
-        } as IClickListItemFeature;
+        } as IFeatureRotationItem;
       } else {
         const regexText = curr.changeDate.match(new RegExp('^([^T]*);*'))[0];
         return {
@@ -277,24 +278,8 @@ export class FeatureWidgetComponent extends WidgetComponent implements OnInit, A
           type: 'Issue',
           date: regexText,
           time: curr.sEstimateTime
-        } as IClickListItemFeature;
+        } as IFeatureRotationItem;
       }
     });
-
-    this.charts[2].data = {
-      items,
-      clickableContent: FeatureDetailComponent,
-      clickableHeader: null
-    } as IClickListData;
   }
-
-  setDefaultIfNoData() {
-    if (!this.hasData) {
-      this.charts[0].data = { items: [{ title: 'No Data Found' }]};
-      this.charts[1].data = { items: [{ title: 'No Data Found' }]};
-      this.charts[2].data = { items: [{ title: 'No Data Found' }]};
-    }
-    super.loadComponent(this.childLayoutTag);
-  }
-
 }

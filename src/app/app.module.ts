@@ -1,5 +1,5 @@
 import {BrowserModule} from '@angular/platform-browser';
-import {NgModule} from '@angular/core';
+import {ErrorHandler, NgModule} from '@angular/core';
 
 // 3rd Party imports
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
@@ -10,6 +10,18 @@ import {AppComponent} from './app.component';
 import {CoreModule} from './core/core.module';
 import {SharedModule} from './shared/shared.module';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {
+  NbThemeModule,
+  NbLayoutModule,
+  NbActionsModule,
+  NbUserModule,
+  NbSearchModule,
+  NbIconModule
+} from '@nebular/theme';
+import { NbEvaIconsModule } from '@nebular/eva-icons';
+import {NgxUIModule} from '@swimlane/ngx-ui';
+import {GlobalErrorHandler} from './app.error.handler';
+import {SsoAuthGuard} from './user/sso/sso.authguard';
 
 @NgModule({
   declarations: [
@@ -21,8 +33,17 @@ import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
     BrowserAnimationsModule,
     CoreModule,
     NgbModule,
-    SharedModule
+    SharedModule,
+    NbThemeModule.forRoot({name: 'dark'}),
+    NbLayoutModule,
+    NbEvaIconsModule,
+    NbActionsModule,
+    NbUserModule,
+    NgxUIModule,
+    NbSearchModule,
+    NbIconModule
   ],
+  providers: [{ provide: ErrorHandler, useClass: GlobalErrorHandler }, SsoAuthGuard],
   bootstrap: [AppComponent],
   exports: []
 })

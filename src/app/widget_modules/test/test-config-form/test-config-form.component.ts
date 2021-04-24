@@ -19,9 +19,12 @@ export class TestConfigFormComponent implements OnInit {
   readonly COLLECTOR_ITEM_TYPE = 'Test';
 
   testConfigForm: FormGroup;
-  searching = false;
-  searchFailed = false;
-  typeAheadResults: (text$: Observable<string>) => Observable<any>;
+  searchingFunctional = false;
+  searchingPerformance = false;
+  searchFunctionalFailed = false;
+  searchPerformanceFailed = false;
+  typeAheadResultsPerformance: (text$: Observable<string>) => Observable<any>;
+  typeAheadResultsFunctional: (text$: Observable<string>) => Observable<any>;
 
   // Format test result title
   getTestResultTitle(collectorItem: any) {
@@ -41,7 +44,6 @@ export class TestConfigFormComponent implements OnInit {
     private dashboardService: DashboardService
   ) {
     this.createForm();
-    console.log(this.functionalTests.controls.length);
   }
 
   ngOnInit() {
@@ -49,22 +51,52 @@ export class TestConfigFormComponent implements OnInit {
     this.loadSavedTestResults();
     this.getDashboardComponent();
 
-    this.typeAheadResults = (text$: Observable<string>) =>
+    this.typeAheadResultsPerformance = (text$: Observable<string>) =>
       text$.pipe(
         debounceTime(300),
         distinctUntilChanged(),
-        tap(() => this.searching = true),
+        tap(() => this.searchingPerformance = true),
         switchMap(term => {
           return term.length < 1 ? of([]) :
             this.collectorService.searchItems(this.COLLECTOR_ITEM_TYPE, term).pipe(
-              tap(() => this.searchFailed = false),
+              tap(val => {
+                if (!val || val.length === 0) {
+                  this.searchPerformanceFailed = true;
+                  return of([]);
+                }
+                this.searchPerformanceFailed = false;
+              }),
               catchError(() => {
-                this.searchFailed = true;
+                this.searchPerformanceFailed = true;
                 return of([]);
               })
             );
         }),
-        tap(() => this.searching = false),
+        tap(() => this.searchingPerformance = false),
+      );
+
+    this.typeAheadResultsFunctional = (text$: Observable<string>) =>
+      text$.pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(() => this.searchingFunctional = true),
+        switchMap(term => {
+          return term.length < 1 ? of([]) :
+            this.collectorService.searchItems(this.COLLECTOR_ITEM_TYPE, term).pipe(
+              tap(val => {
+                if (!val || val.length === 0) {
+                  this.searchFunctionalFailed = true;
+                  return of([]);
+                }
+                this.searchFunctionalFailed = false;
+              }),
+              catchError(() => {
+                this.searchFunctionalFailed = true;
+                return of([]);
+              })
+            );
+        }),
+        tap(() => this.searchingFunctional = false),
       );
   }
 
@@ -134,7 +166,7 @@ export class TestConfigFormComponent implements OnInit {
 
 
   // Create new config which will be posted to database
-  private submitForm() {
+  submitForm() {
     const newConfig = {
       name: 'codeanalysis',
       options: {
@@ -156,4 +188,6 @@ export class TestConfigFormComponent implements OnInit {
     this.activeModal.close(newConfig);
   }
 
+  // convenience getter for easy access to form fields
+  get configForm() { return this.testConfigForm.controls; }
 }

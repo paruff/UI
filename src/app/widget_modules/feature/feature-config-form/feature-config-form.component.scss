@@ -1,15 +1,24 @@
-.modal-body {
-  background-color: #565859;
-  color: #fafafa;
+.modal-content {
+  background-color: lightgray;
+  border: none;
+}
+
+.modal-header {
+  background-color: lightgray;
+  border: none;
+  color: white;
+}
+
+.model-body {
+  background-color: lightgray;
 }
 
 .modal-footer {
-  padding: 15px;
-  background-color: #444648;
-  color: lightgrey;
+  background-color: lightgray;
+  border: none;
+  justify-content: center;
 }
 
-select {
-  padding: 7px;
-  border-radius: 4px;
+.invalid-feedback, .required-text {
+  color:orangered;
 }

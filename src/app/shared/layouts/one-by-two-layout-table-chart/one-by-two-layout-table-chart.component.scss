@@ -1,5 +1,6 @@
 .chartParent {
   padding: 5px;
+  width: 400px;
 }
 
 .divTable{
@@ -13,7 +14,11 @@
 
 .divTableCell {
   display: table-cell;
-  padding: 10px;
+}
+
+.header-text {
+  font-weight: bold;
+  color: dimgrey;
 }
 
 .divTableBody {

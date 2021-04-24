@@ -15,7 +15,6 @@ export class OSSConfigFormComponent implements OnInit {
 
   private widgetConfigId: string;
   private componentId: string;
-  private dashboard: any;
 
   ossConfigForm: FormGroup;
   searching = false;
@@ -57,7 +56,13 @@ export class OSSConfigFormComponent implements OnInit {
         switchMap(term => {
           return term.length < 2 ? of([]) :
             this.collectorService.searchItems('LibraryPolicy', term).pipe(
-              tap(() => this.searchFailed = false),
+              tap(val => {
+                if (!val || val.length === 0) {
+                  this.searchFailed = true;
+                  return of([]);
+                }
+                this.searchFailed = false;
+              }),
               catchError(() => {
                 this.searchFailed = true;
                 return of([]);
@@ -113,9 +118,11 @@ export class OSSConfigFormComponent implements OnInit {
   private getDashboardComponent() {
     this.dashboardService.dashboardConfig$.pipe(take(1),
       map(dashboard => {
-        this.dashboard = dashboard;
         return dashboard.application.components[0].id;
       })).subscribe(componentId => this.componentId = componentId);
   }
+
+  // convenience getter for easy access to form fields
+  get configForm() { return this.ossConfigForm.controls; }
 
 }

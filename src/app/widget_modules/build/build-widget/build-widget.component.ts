@@ -5,12 +5,11 @@ import {
   ComponentFactoryResolver,
   OnDestroy,
   OnInit,
-  ViewChild,
+  ViewChild
 } from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
 import {of, Subscription} from 'rxjs';
 import {distinctUntilChanged, startWith, switchMap} from 'rxjs/operators';
-import {IClickListData, IClickListItem} from 'src/app/shared/charts/click-list/click-list-interfaces';
+import {IClickListData, IClickListItemBuild} from 'src/app/shared/charts/click-list/click-list-interfaces';
 import {DashStatus} from 'src/app/shared/dash-status/DashStatus';
 import {DashboardService} from 'src/app/shared/dashboard.service';
 import {LayoutDirective} from 'src/app/shared/layouts/layout.directive';
@@ -22,7 +21,8 @@ import {IBuild} from '../interfaces';
 import {BUILD_CHARTS} from './build-charts';
 // @ts-ignore
 import moment from 'moment';
-import * as __ from 'lodash';
+import { groupBy } from 'lodash';
+
 import {WidgetState} from '../../../shared/widget-header/widget-state';
 
 @Component({
@@ -48,9 +48,8 @@ export class BuildWidgetComponent extends WidgetComponent implements OnInit, Aft
   constructor(componentFactoryResolver: ComponentFactoryResolver,
               cdr: ChangeDetectorRef,
               dashboardService: DashboardService,
-              route: ActivatedRoute,
               private buildService: BuildService) {
-    super(componentFactoryResolver, cdr, dashboardService, route);
+    super(componentFactoryResolver, cdr, dashboardService);
   }
 
   // Initialize the widget and set layout and charts.
@@ -142,7 +141,7 @@ export class BuildWidgetComponent extends WidgetComponent implements OnInit, Aft
 
   private collectDataArray(content: any[]) {
     const dataArrayToSend = [];
-    const groupedResults = __.groupBy(content, (result) => moment(new Date(result.time), 'DD/MM/YYYY').startOf('day'));
+    const groupedResults = groupBy(content, (result) => moment(new Date(result.time), 'DD/MM/YYYY').startOf('day'));
     for (const key of Object.keys(groupedResults)) {
       dataArrayToSend.push(
         {
@@ -166,19 +165,30 @@ export class BuildWidgetComponent extends WidgetComponent implements OnInit, Aft
       success: DashStatus.PASS,
       inprogress: DashStatus.IN_PROGRESS
     };
+
+
     const latestBuildData = sorted.map(build => {
       const buildStatus = buildStatusTable[build.buildStatus.toLowerCase()] ?
         buildStatusTable[build.buildStatus.toLowerCase()] : DashStatus.FAIL;
+      const statusTextFitted = DashStatus.FAIL ? '!' : build.buildStatus;
+      const baseLogUrl = build.buildUrl.split('/job')[0];
       return {
         status: buildStatus,
-        statusText: build.buildStatus,
-        title: build.number,
+        buildStatus: build.buildStatus,
+        statusText: statusTextFitted,
+        title: `Build: ${build.number}`,
+        collectorItemId: build.collectorItemId,
         subtitles: [
           new Date(build.endTime)
         ],
+        startTime: new Date(build.startTime),
+        duration: build.endTime - build.startTime,
         url: build.buildUrl,
-        number: build.number
-      } as IClickListItem;
+        baseLogUrl,
+        number: build.number,
+        stages: build.stages,
+        buildId: build.id
+      } as IClickListItemBuild;
     });
     this.charts[1].data = {
       items: latestBuildData,

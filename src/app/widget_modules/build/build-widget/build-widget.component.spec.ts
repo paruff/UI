@@ -13,6 +13,7 @@ import { GET_DASHBOARD_MOCK, POST_DASHBOARD_MOCK } from '../../../shared/dashboa
 import { BuildService } from '../build.service';
 import { IBuild } from '../interfaces';
 import { BuildWidgetComponent } from './build-widget.component';
+import { BuildModule } from '../build.module';
 
 class MockBuildService {
 
@@ -35,7 +36,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c8aa40daa8ebb3c1bfd39a7',
@@ -54,7 +56,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c8ab33daa8ebb3c1bfd5123',
@@ -73,7 +76,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c8ac201aa8ebb3c1bfd65de',
@@ -92,7 +96,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c8bf20daa8ebb3c1bfde77e',
@@ -111,7 +116,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c8feb62aa8ebb3c1bfee736',
@@ -130,7 +136,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c9133dbaa8ebb3c1bffa612',
@@ -149,7 +156,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c913a46aa8ebb3c1bffafca',
@@ -168,7 +176,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c91796eaa8ebb3c1bfff67e',
@@ -187,7 +196,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c919665aa8ebb3c1bfffe6d',
@@ -206,7 +216,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c919b5eaa8ebb3c1b00001d',
@@ -225,7 +236,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c91a859aa8ebb3c1b000542',
@@ -244,7 +256,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       },
       {
         id: '5c91b299aa8ebb3c1b000848',
@@ -263,7 +276,8 @@ class MockBuildService {
             type: 'GIT'
           }
         ],
-        sourceChangeSet: []
+        sourceChangeSet: [],
+        stages: []
       }
     ],
     lastUpdated: 1553613455230
@@ -293,12 +307,12 @@ class MockDashboardService {
     of(GET_DASHBOARD_MOCK).subscribe(dashboard => this.dashboardSubject.next(dashboard));
   }
 
-  clearDashboard() {}
+  clearDashboard() { }
 }
 
 @NgModule({
   declarations: [],
-  imports: [HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([]), NgbModule],
+  imports: [BuildModule, HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([]), NgbModule],
   entryComponents: []
 })
 class TestModule { }
@@ -314,7 +328,7 @@ describe('BuildWidgetComponent', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: BuildService, useClass: MockBuildService },
-        { provide: DashboardService, useClass: MockDashboardService}
+        { provide: DashboardService, useClass: MockDashboardService }
       ],
       imports: [
         TestModule, HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([])
@@ -343,20 +357,23 @@ describe('BuildWidgetComponent', () => {
     jasmine.clock().mockDate(baseTime);
     fixture.detectChanges();
     component.stopRefreshInterval();
-    buildService.fetchDetails('123', 14).subscribe(result => {
-      component.loadCharts(result);
 
-      expect(component.charts[0].data.dataPoints[0].series.length).toEqual(1);
-      expect(component.charts[0].data.dataPoints[1].series.length).toEqual(1);
-      expect(component.charts[0].data.dataPoints[0].series[0].value).toEqual(7);
-      expect(component.charts[0].data.dataPoints[1].series[0].value).toEqual(6);
+    setTimeout(() => {
+      buildService.fetchDetails('123', 14).subscribe(result => {
+        component.loadCharts(result);
 
-      expect(component.charts[1].data.items[0].title).toEqual('708');
-      expect(component.charts[3].data[0].value).toEqual(0);
-      expect(component.charts[3].data[1].value).toEqual(0);
-      expect(component.charts[3].data[2].value).toEqual(7);
-    });
-    component.ngOnDestroy();
+        expect(component.charts[0].data.dataPoints[0].series.length).toEqual(1);
+        expect(component.charts[0].data.dataPoints[1].series.length).toEqual(1);
+        expect(component.charts[0].data.dataPoints[0].series[0].value).toEqual(7);
+        expect(component.charts[0].data.dataPoints[1].series[0].value).toEqual(6);
+
+        expect(component.charts[1].data.items[0].title).toEqual('Build: 708');
+        expect(component.charts[3].data[0].value).toEqual(0);
+        expect(component.charts[3].data[1].value).toEqual(0);
+        expect(component.charts[3].data[2].value).toEqual(7);
+      });
+      component.ngOnDestroy();
+    }, 500);
   });
 });
 

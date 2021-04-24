@@ -2,7 +2,7 @@
 @import '../../../styles/css/mixins.scss';
 
 .widget-container-small {
-  font-size: 10px;
+  font-size: 13px;
   line-height: normal;
 }
 
@@ -23,8 +23,6 @@
 
   // heading in a widget
   .widget-heading {
-    border-bottom: 1px solid $dash-widget-heading-border;
-    color: $dash-widget-heading-text;
     letter-spacing: .1em;
     padding-bottom: .5em;
     margin-bottom: 1em;
@@ -83,8 +81,6 @@
     }
   }
 
-  // sections of widgets should have the same widget markup
-  // but may be styled slightly differently
   .widget-body .widget {
     padding: 0;
 
@@ -95,7 +91,6 @@
     }
   }
 
-  // when widget hasn't yet been configured
   .widget-body-config {
     background: $dash-widget-section-highlight;
     border: .2em $dash-state-config-text;
@@ -103,14 +98,14 @@
     color: $dash-state-config-text;
     display: none;
     font-size: 2em;
-    line-height: 2.4em;
-    margin: 1em 0;
-    padding: 2em;
+    //line-height: 2.4em;
+    margin: 0.5em 0;
+    padding: 0.5em;
     text-align: center;
 
     .fa {
       border: 2px solid $dash-state-config-text;
-      margin-bottom: .75em;
+      //margin-bottom: .75em;
       padding: .45em .4em;
       @include border-radius(50%);
 
@@ -126,7 +121,6 @@
     }
   }
 
-  // changes when not yet configured
   &.configure {
     .widget-settings-icon {
       display: none;
@@ -150,15 +144,4 @@
       }
     }
   }
-
-  // // styles when in an alert state
-  // &.alert {
-  //     #gradient > @include vertical(lighten($dash-widget-alert-bg, 10%), darken($dash-widget-alert-bg, 10%));
-  //     color: $dash-widget-alert-text;
-
-  //     .widget-heading {
-  //         border-bottom-color: $dash-widget-alert-heading-border;
-  //         color: $dash-widget-alert-text;
-  //     }
-  // }
 }

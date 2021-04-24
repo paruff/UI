@@ -11,17 +11,15 @@ import { WidgetComponent } from 'src/app/shared/widget/widget.component';
 import { OneByTwoLayoutComponent } from 'src/app/shared/layouts/one-by-two-layout/one-by-two-layout.component';
 import { TestService } from '../test.service';
 import { DashboardService } from 'src/app/shared/dashboard.service';
-import { ActivatedRoute } from '@angular/router';
 import { TEST_CHARTS } from './test-charts';
 import {
   startWith,
   distinctUntilChanged,
   switchMap,
-  map,
   take
 } from 'rxjs/operators';
 import { LayoutDirective } from 'src/app/shared/layouts/layout.directive';
-import { Subscription, of } from 'rxjs';
+import {Subscription, of, forkJoin} from 'rxjs';
 import { ITest, TestType } from '../interfaces';
 import { IClickListItemTest, IClickListData } from 'src/app/shared/charts/click-list/click-list-interfaces';
 import { TestDetailComponent } from '../test-detail/test-detail.component';
@@ -36,17 +34,13 @@ export class TestWidgetComponent extends WidgetComponent implements OnInit, Afte
 
    // Reference to the subscription used to refresh the widget
   private intervalRefreshSubscription: Subscription;
-
-  private readonly TEST_TIME_RANGE = 999 * 24 * 60 * 60 * 1000;
-
   @ViewChild(LayoutDirective, {static: false}) childLayoutTag: LayoutDirective;
 
   constructor(componentFactoryResolver: ComponentFactoryResolver,
               cdr: ChangeDetectorRef,
               dashboardService: DashboardService,
-              route: ActivatedRoute,
               private testService: TestService) {
-    super(componentFactoryResolver, cdr, dashboardService, route);
+    super(componentFactoryResolver, cdr, dashboardService);
   }
 
   ngOnInit() {
@@ -82,11 +76,12 @@ export class TestWidgetComponent extends WidgetComponent implements OnInit, Afte
         if (this.dashboardService.checkCollectorItemTypeExist('Test')) {
           this.state = WidgetState.READY;
         }
-        const currentTime: number = new Date().getTime();
-        const tests$ = this.testService.fetchTestResults(widgetConfig.componentId, currentTime - this.TEST_TIME_RANGE,
-          currentTime, 4, [TestType.Functional, TestType.Performance]);
-        return tests$;
-      })).subscribe( tests => {
+        const funcTest$ = this.testService.fetchTestResults(widgetConfig.componentId, 1, 4, [TestType.Functional]);
+        const perfTest$ = this.testService.fetchTestResults(widgetConfig.componentId, 1, 4, [TestType.Performance]);
+        return forkJoin([funcTest$, perfTest$]);
+      })).subscribe( result => {
+        const tests = Array.prototype.concat.apply([], result);
+        this.hasData = (tests && tests.length > 0);
         if (this.hasData) {
           this.loadCharts(tests);
         } else {
@@ -149,7 +144,7 @@ export class TestWidgetComponent extends WidgetComponent implements OnInit, Afte
       return {
         title: this.formatTitle(title, 100),
         subtitles: [
-          'No data found.',
+          'No data found',
           ''
         ]
       } as IClickListItemTest;
@@ -160,7 +155,7 @@ export class TestWidgetComponent extends WidgetComponent implements OnInit, Afte
       title: this.formatTitle(title, 100),
       subtitles: [
         successRate,
-        new Date(test.endTime),
+        new Date( test.timestamp),
       ],
       data: test
     } as IClickListItemTest;

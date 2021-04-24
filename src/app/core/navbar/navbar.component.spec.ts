@@ -4,6 +4,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 import { NavbarComponent } from './navbar.component';
+import {CUSTOM_ELEMENTS_SCHEMA} from '@angular/core';
+import {NbThemeModule} from '@nebular/theme';
 
 describe('NavbarComponent', () => {
   let component: NavbarComponent;
@@ -13,9 +15,11 @@ describe('NavbarComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         RouterTestingModule.withRoutes([]),
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        NbThemeModule.forRoot()
       ],
-      declarations: [ NavbarComponent ]
+      declarations: [ NavbarComponent ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     })
     .compileComponents();
   }));
@@ -37,5 +41,10 @@ describe('NavbarComponent', () => {
   });
   it('should get userName', () => {
     const userTest = component.userName;
+    expect(userTest).not.toBeNull();
+  });
+  it('should get danger status for login icon', () => {
+    expect(component.customPowerIcon.status).toBe('danger');
+    expect(component.customPowerIcon.icon).toBe('power-outline');
   });
 });

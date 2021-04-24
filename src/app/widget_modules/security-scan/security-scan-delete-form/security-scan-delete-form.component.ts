@@ -16,10 +16,10 @@ export class SecurityScanDeleteFormComponent implements OnInit {
   // buttons
   public confirm = 'Confirm';
   public cancel = 'Cancel';
-  @Input() public message = 'This Security Scan item will be deleted immediately. Would you like to confirm? (You cannot undo this action)';
+  @Input() public message = 'This security scan item will be deleted immediately. Would you like to delete?';
 
   private componentId: string;
-  private widgetConfigId: string;
+  widgetConfigId: string;
 
   securityDeleteForm: FormGroup;
 

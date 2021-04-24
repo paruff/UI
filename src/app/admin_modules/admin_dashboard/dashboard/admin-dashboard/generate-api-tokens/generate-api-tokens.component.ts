@@ -3,7 +3,7 @@ import { UserDataService } from '../../../services/user-data.service';
 import { NgbModal, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { EditTokenModalComponent } from '../modal/edit-token-modal/edit-token-modal.component';
 import { GenerateApiTokenModalComponent } from '../modal/generate-api-token-modal/generate-api-token-modal.component';
-import { AdminDeleteComponent } from '../modal/admin-delete/admin-delete.component';
+import {GeneralDeleteComponent} from '../../../../../shared/modals/general-delete-modal/general-delete-modal.component';
 
 @Component({
   selector: 'app-generate-tokens',
@@ -15,6 +15,7 @@ export class GenerateApiTokensComponent implements OnInit {
   error: any = {};
   apitokens: any[] = [];
   tokenSearch = '';
+  p = 1;
   constructor(private userData: UserDataService, private modalService: NgbModal) { }
 
   ngOnInit() {
@@ -40,8 +41,8 @@ export class GenerateApiTokensComponent implements OnInit {
   }
 
   deleteToken(apiToken) {
-    const modalRef = this.modalService.open(AdminDeleteComponent);
-    modalRef.componentInstance.title = `Are you sure you want to delete ${apiToken.apiUser}?`;
+    const modalRef = this.modalService.open(GeneralDeleteComponent);
+    modalRef.componentInstance.title = apiToken.apiUser;
     modalRef.result.then((newConfig) => {
       this.userData.deleteToken(apiToken.id).subscribe(response => {
         this.loadApiToken();

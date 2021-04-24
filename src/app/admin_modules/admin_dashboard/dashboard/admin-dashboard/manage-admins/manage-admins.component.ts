@@ -15,6 +15,7 @@ export class ManageAdminsComponent implements OnInit {
   userSearch = '';
   authType: any;
   username: any;
+  p = 1;
 
   constructor(private userData: UserDataService, private authService: AuthService) {
     this.authType = this.authService.getAuthType();
@@ -28,7 +29,6 @@ export class ManageAdminsComponent implements OnInit {
   loadUser() {
     this.userData.users().subscribe((response: any) => {
       this.users = response;
-      console.log('users ', response);
     });
   }
   promoteUserToAdmin(user) {

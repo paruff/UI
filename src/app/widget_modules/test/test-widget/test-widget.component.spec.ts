@@ -11,6 +11,7 @@ import { NgbModule, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule } from '@angular/router';
 import { TestService } from '../test.service';
 import { DashboardService } from 'src/app/shared/dashboard.service';
+import {TestModule} from '../test.module';
 
 class MockTestService {
   mockTestData = {
@@ -41,10 +42,11 @@ class MockTestService {
 
 @NgModule({
   declarations: [],
-  imports: [HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([]), NgbModule],
+  imports: [HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule,
+    RouterModule.forRoot([]), NgbModule, TestModule],
   entryComponents: []
 })
-class TestModule { }
+class TestsModule { }
 
 
 describe('TestWidgetComponent', () => {
@@ -104,7 +106,7 @@ describe('TestWidgetComponent', () => {
         { provide: TestService, useClass: MockTestService },
       ],
       imports: [
-        TestModule, HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([])
+        TestsModule, HttpClientTestingModule, SharedModule, CommonModule, BrowserAnimationsModule, RouterModule.forRoot([])
       ],
       declarations: [],
       schemas: [NO_ERRORS_SCHEMA]
@@ -195,7 +197,7 @@ describe('TestWidgetComponent', () => {
 
     const clickItemNoData = component.generateTestClickListChartItem([], 'title');
     expect(clickItemNoData.title).toBe(component.formatTitle('title', 100));
-    expect(clickItemNoData.subtitles[0]).toBe('No data found.');
+    expect(clickItemNoData.subtitles[0]).toBe('No data found');
   });
 
   it('should format title correctly', () => {
@@ -226,8 +228,6 @@ describe('TestWidgetComponent', () => {
     spyOn(component, 'getCurrentWidgetConfig').and.returnValues(of(mockConfig), of(mockConfig), of(null));
     spyOn(testService, 'fetchTestResults').and.returnValues(of([mockTest]), of([]));
     spyOn(dashboardService, 'checkCollectorItemTypeExist').and.returnValues(true, false);
-    component.startRefreshInterval();
-    component.startRefreshInterval();
     component.startRefreshInterval();
   });
 

@@ -2,31 +2,32 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { GenerateApiTokensComponent } from './generate-api-tokens.component';
 import { EditTokenModalComponent } from '../modal/edit-token-modal/edit-token-modal.component';
-import { DashEditComponent } from '../dash-edit/dash-edit.component';
-import { DashTrashComponent } from '../dash-trash/dash-trash.component';
+import { DashEditComponent } from '../../../../../shared/dash-edit/dash-edit.component';
+import { DashTrashComponent } from '../../../../../shared/dash-trash/dash-trash.component';
 import { GenerateApiTokenModalComponent } from '../modal/generate-api-token-modal/generate-api-token-modal.component';
 import { UserDataService } from '../../../services/user-data.service';
 import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { AdminFilterPipe } from '../../../pipes/filter.pipe';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { API_TOKEN_LIST } from '../../../services/user-data.service.mockdata';
 import { NgModule } from '@angular/core';
-import { AdminOrderByPipe } from '../../../pipes/order-by.pipe';
-import { AdminDeleteComponent } from '../modal/admin-delete/admin-delete.component';
+import {GeneralOrderByPipe} from '../../../../../shared/pipes/order-by.pipe';
+import {GeneralFilterPipe} from '../../../../../shared/pipes/filter.pipe';
+import {GeneralDeleteComponent} from '../../../../../shared/modals/general-delete-modal/general-delete-modal.component';
+import {NgxPaginationModule} from 'ngx-pagination';
 
 @NgModule({
-  declarations: [GenerateApiTokensComponent, DashEditComponent, DashTrashComponent, AdminFilterPipe,
-          AdminOrderByPipe, EditTokenModalComponent,
+  declarations: [GenerateApiTokensComponent, DashEditComponent, DashTrashComponent, GeneralFilterPipe,
+          GeneralOrderByPipe, EditTokenModalComponent,
     GenerateApiTokenModalComponent,
-    AdminDeleteComponent],
+    GeneralDeleteComponent],
   providers: [UserDataService, NgbModal],
-  imports: [FormsModule, CommonModule, ReactiveFormsModule, NgbModule, HttpClientTestingModule],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule, NgbModule, HttpClientTestingModule, NgxPaginationModule],
   entryComponents: [
     EditTokenModalComponent,
     GenerateApiTokenModalComponent,
-    AdminDeleteComponent
+    GeneralDeleteComponent
   ]
 })
 class TestModule { }

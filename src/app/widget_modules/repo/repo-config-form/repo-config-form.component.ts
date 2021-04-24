@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import {map, take} from 'rxjs/operators';
 import { CollectorService } from 'src/app/shared/collector.service';
@@ -24,7 +24,7 @@ export class RepoConfigFormComponent implements OnInit {
       return;
     }
     this.widgetConfigId = widgetConfig.options.id;
-    this.repoConfigForm.get('scm').setValue(widgetConfig.options.scm.name);
+    this.repoConfigForm.get('scm').setValue(widgetConfig.options.scm ? widgetConfig.options.scm.name : '');
     this.repoConfigForm.get('url').setValue(widgetConfig.options.url);
     this.repoConfigForm.get('branch').setValue(widgetConfig.options.branch);
     this.repoConfigForm.get('userID').setValue(widgetConfig.options.userID);
@@ -47,9 +47,9 @@ export class RepoConfigFormComponent implements OnInit {
 
   public createForm() {
     this.repoConfigForm = this.formBuilder.group({
-      scm: [''],
-      url: '',
-      branch: '',
+      scm: ['', Validators.required],
+      url: ['', Validators.required],
+      branch: ['', Validators.required],
       userID: '',
       password: '',
       personalAccessToken: ''
@@ -91,4 +91,7 @@ export class RepoConfigFormComponent implements OnInit {
         return dashboard.application.components[0].id;
       })).subscribe(componentId => this.componentId = componentId);
   }
+
+  // convenience getter for easy access to form fields
+  get configForm() { return this.repoConfigForm.controls; }
 }

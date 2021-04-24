@@ -7,7 +7,6 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
 import {forkJoin, of, Subscription} from 'rxjs';
 import {catchError, distinctUntilChanged, startWith, switchMap} from 'rxjs/operators';
 import {DashboardService} from 'src/app/shared/dashboard.service';
@@ -19,7 +18,7 @@ import {IRepo} from '../interfaces';
 import {CollectorService} from '../../../shared/collector.service';
 // @ts-ignore
 import moment from 'moment';
-import * as _ from 'lodash';
+import { groupBy } from 'lodash';
 // tslint:disable-next-line:max-line-length
 import {OneByTwoLayoutTableChartComponent} from '../../../shared/layouts/one-by-two-layout-table-chart/one-by-two-layout-table-chart.component';
 import {WidgetState} from '../../../shared/widget-header/widget-state';
@@ -41,10 +40,9 @@ export class RepoWidgetComponent extends WidgetComponent implements OnInit, Afte
   constructor(componentFactoryResolver: ComponentFactoryResolver,
               cdr: ChangeDetectorRef,
               dashboardService: DashboardService,
-              route: ActivatedRoute,
               collectorService: CollectorService,
               private repoService: RepoService) {
-    super(componentFactoryResolver, cdr, dashboardService, route);
+    super(componentFactoryResolver, cdr, dashboardService);
   }
 
   // Initialize the widget and set layout and charts.
@@ -86,10 +84,11 @@ export class RepoWidgetComponent extends WidgetComponent implements OnInit, Afte
           this.repoService.fetchPullRequests(this.params.componentId, this.params.numberOfDays).pipe(catchError(err => of(err))),
           this.repoService.fetchIssues(this.params.componentId, this.params.numberOfDays).pipe(catchError(err => of(err))));
       })).subscribe(([commits, pulls, issues]) => {
-        this.hasData = (commits && commits.length > 0 && pulls && pulls.length > 0 && issues && issues.length > 0);
-        if (this.hasData) {
+        if ((commits || pulls || issues) && (commits.length > 0 || pulls.length > 0 || issues.length > 0)) {
+          this.hasData = true;
           this.loadCharts(commits, pulls, issues);
         } else {
+          this.hasData = false;
           this.setDefaultIfNoData();
         }
     });
@@ -211,7 +210,7 @@ export class RepoWidgetComponent extends WidgetComponent implements OnInit, Afte
 
   private collectDataArray(content: any[]) {
     const dataArrayToSend = [];
-    const groupedResults = _.groupBy(content, (result) => moment(new Date(result.time), 'DD/MM/YYYY').startOf('day'));
+    const groupedResults = groupBy(content, (result) => moment(new Date(result.time), 'DD/MM/YYYY').startOf('day'));
     for (const key of Object.keys(groupedResults)) {
       dataArrayToSend.push(
         {
@@ -283,19 +282,28 @@ export class RepoWidgetComponent extends WidgetComponent implements OnInit, Afte
   }
 
   setDefaultIfNoData() {
-    if (!this.hasData) {
-      this.charts[0].data.dataPoints[0].series = [];
-      this.charts[0].data.dataPoints[1].series = [];
-      this.charts[0].data.dataPoints[2].series = [];
-      this.charts[1].data = [];
-      this.charts[2].data = [];
-      this.charts[3].data = [];
-      this.charts[4].data = [];
-      this.charts[5].data = [];
-      this.charts[6].data = [];
-      this.charts[7].data = [];
-      this.charts[8].data = [];
-      this.charts[9].data = [];
+    if (this.hasData === false) {
+      this.charts[0].data.dataPoints[0].series = [{name: new Date(), value: 0, data: 'Commits'}];
+      this.charts[0].data.dataPoints[1].series = [{name: new Date(), value: 0, data: 'Pulls'}];
+      this.charts[0].data.dataPoints[2].series = [{name: new Date(), value: 0, data: 'Issues'}];
+      this.charts[1].data = '0';
+      this.charts[2].data = '0';
+      this.charts[3].data = '0';
+      this.charts[4].data = '0';
+      this.charts[5].data = '0';
+      this.charts[6].data = '0';
+      this.charts[7].data = '0';
+      this.charts[8].data = '0';
+      this.charts[9].data = '0';
+      this.charts[10].data = '0';
+      this.charts[11].data = '0';
+      this.charts[12].data = '0';
+      this.charts[13].data = '0';
+      this.charts[14].data = '0';
+      this.charts[15].data = '0';
+      this.charts[16].data = '0';
+      this.charts[17].data = '0';
+      this.charts[18].data = '0';
     }
     super.loadComponent(this.childLayoutTag);
   }
