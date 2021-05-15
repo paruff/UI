@@ -24,6 +24,10 @@ export interface IClickListItem {
   url: string;
 }
 
+export interface IClickListItemMetric extends IClickListItem {
+  instances?: any;
+}
+
 
 export interface IClickListItemBuild extends IClickListItem {
   buildStatus: string;
@@ -42,6 +46,12 @@ export interface IClickListItemDeploy extends IClickListItem {
 export interface IClickListItemStaticAnalysis extends IClickListData {
   url: string;
   version?: string;
+  name?: string;
+  timestamp?: any;
+}
+
+export interface IClickListItemSecurityScan extends IClickListData {
+  url: string;
   name?: string;
   timestamp?: any;
 }

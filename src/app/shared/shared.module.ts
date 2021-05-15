@@ -73,6 +73,8 @@ import {GeneralDeleteComponent} from './modals/general-delete-modal/general-dele
 import {NgxPaginationModule} from 'ngx-pagination';
 import {CollectorItemModule} from '../viewer_modules/collector-item/collector-item.module';
 import {NfrrModule} from '../screen_modules/nfrr/nfrr.module';
+import { XByOneLayoutComponent } from './layouts/x-by-one-layout/x-by-one-layout.component';
+import { RefreshModalComponent } from './modals/refresh-modal/refresh-modal.component';
 
 @NgModule({
   declarations: [
@@ -126,7 +128,9 @@ import {NfrrModule} from '../screen_modules/nfrr/nfrr.module';
     DashEditComponent,
     EditDashboardModalComponent,
     GeneralFilterPipe,
-    GeneralOrderByPipe
+    GeneralOrderByPipe,
+    XByOneLayoutComponent,
+    RefreshModalComponent
   ],
   entryComponents: [
     GeneralDeleteComponent,
@@ -152,6 +156,7 @@ import {NfrrModule} from '../screen_modules/nfrr/nfrr.module';
     PlaceholderWidgetComponent,
     PlainTextChartComponent,
     TwoByOneLayoutComponent,
+    XByOneLayoutComponent,
     RotationChartComponent,
     TwoByTwoLayoutComponent,
     TwoByTwoLayoutComponent,
